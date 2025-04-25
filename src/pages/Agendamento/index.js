@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, StyleSheet, Modal, Text, TouchableOpacity, TextInput } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 
+// Configurando o Locale
 LocaleConfig.locales['br'] = {
     monthNames: [
         'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -14,44 +15,62 @@ LocaleConfig.locales['br'] = {
 };
 LocaleConfig.defaultLocale = 'br';
 
-export default function Agendamento() {
-    const [selected, setSelected] = useState(''); 
+export default function Agendamento({ route }) {
+    const { onSelectDate } = route.params;
+    const [selectedDate, setSelectedDate] = useState(''); 
     const [modalVisible, setModalVisible] = useState(false);
-    const [startTime, setStartTime] = useState(''); // Inicialize startTime
+    const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
+    const [subject, setSubject] = useState('');
+
     const today = new Date();
     const currentDate = today.toISOString().split('T')[0];
+    const maxDate = new Date();
+    maxDate.setDate(today.getDate() + 15);
+    const formattedMaxDate = maxDate.toISOString().split('T')[0];
 
-    const formatDate = (dateString) => {
-        const [year, month,day] = dateString.split('-');
-        return `${day}-${month}-${year}`;
+    const markedDates = {};
+    let dateCursor = new Date(currentDate);
+
+    // Marca as datas clicáveis
+    while (dateCursor <= maxDate) {
+        const dateString = dateCursor.toISOString().split('T')[0];
+        markedDates[dateString] = { enabled: true };
+        dateCursor.setDate(dateCursor.getDate() + 1);
     }
 
+    const formatDate = (dateString) => {
+        const [year, month, day] = dateString.split('-');
+        return `${day}-${month}-${year}`;
+    };
+
     const handleDayPress = (day) => {
-        const formattedDate = formatDate(day.dateString);
-        setSelected(formattedDate);
+        setSelectedDate(formatDate(day.dateString));
         setModalVisible(true);
-        setStartTime(''); // Limpa os campos ao abrir o modal
+        setStartTime('');
         setEndTime('');
+        setSubject('');
     };
 
     const handleSave = () => {
-        // Lógica para salvamento dos dados no DB
-        console.log(`Agenda para ${selected}: ${startTime} - ${endTime}`);
+        onSelectDate(selectedDate, startTime, endTime, subject); // Chama a função para salvar os dados
         setModalVisible(false);
     };
 
     const handleClear = () => {
         setStartTime('');
         setEndTime('');
+        setSubject('');
     };
-
+    
     return (
         <View style={styles.container}>
             <View style={styles.areaCalendario}>
                 <Calendar
                     current={currentDate}
                     minDate={currentDate}
+                    maxDate={formattedMaxDate}
+                    markedDates={markedDates}
                     theme={{
                         backgroundColor: '#ffffff',
                         calendarBackground: '#ffffff',
@@ -62,26 +81,18 @@ export default function Agendamento() {
                         textDisabledColor: 'grey',
                     }}
                     onDayPress={handleDayPress}
-                    markedDates={{
-                        [selected]: {
-                            selected: true,
-                            disableTouchEvent: true,
-                            selectedDotColor: 'red',
-                            selectedColor: '#ff3f48',
-                        }
-                    }}
                 />
             </View>
 
             <Modal
                 animationType="slide"
-                transparent={true} // Mude para true para fundo semi-transparente
+                transparent={true}
                 visible={modalVisible}
                 onRequestClose={() => setModalVisible(false)}
             >
                 <View style={styles.areaModal}>
                     <View style={styles.dadosModal}>
-                        <Text style={styles.textoTitulo}>Agenda do dia {selected}</Text>
+                        <Text style={styles.textoTitulo}>Agenda do dia {selectedDate}</Text>
                         <View style={styles.areaInput}>
                             <Text style={styles.texto}>Início:</Text>
                             <TextInput
@@ -89,6 +100,7 @@ export default function Agendamento() {
                                 placeholder="00:00"
                                 value={startTime}
                                 onChangeText={setStartTime}
+                                keyboardType='numeric'
                             />
                             <Text style={styles.texto}>Fim:</Text>
                             <TextInput
@@ -96,6 +108,7 @@ export default function Agendamento() {
                                 placeholder="00:00"
                                 value={endTime}
                                 onChangeText={setEndTime}
+                                keyboardType='numeric'
                             />
                         </View>
                         <View style={styles.areaInput}>
@@ -103,15 +116,19 @@ export default function Agendamento() {
                             <TextInput
                                 style={styles.input}
                                 placeholder="Título da disciplina"
-                               
+                                value={subject}
+                                onChangeText={setSubject}
                             />
-                            
                         </View>
                         <View style={styles.areaBtn}>
-                            <TouchableOpacity style={styles.btn} onPress={handleSave}>
+                            <TouchableOpacity
+                             style={styles.btn}
+                             onPress={handleSave}>
                                 <Text style={styles.texto}>Salvar</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={styles.btn} onPress={handleClear}>
+                            <TouchableOpacity
+                             style={styles.btn} 
+                             onPress={handleClear}>
                                 <Text style={styles.texto}>Limpar</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.btn} onPress={() => setModalVisible(false)}>
@@ -141,7 +158,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(198, 198, 198, 0.8)', // Fundo semi-transparente
+        backgroundColor: 'rgba(198, 198, 198, 0.8)',
         padding: 10,
     },
     dadosModal: {

@@ -6,6 +6,13 @@ import { useNavigation } from "@react-navigation/native";
 export default function Login() {
     const navigation = useNavigation();
     const [modalVisible, setModalVisible] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+
+    const clearLoginData = () => {
+        setEmail('');
+        setPassword('');
+    };
 
     return (
         <View style={styles.container}>
@@ -24,11 +31,16 @@ export default function Login() {
                 <TextInput 
                     style={styles.input}
                     placeholder="Digite seu e-mail cadastrado"
+                    value={email}
+                    onChangeText={setEmail}
                 />
                 <TextInput 
                     style={styles.input}
                     placeholder="Digite sua senha"
+                    value={password}
+                    onChangeText={setPassword}
                     secureTextEntry
+
                 />
                 <View style={styles.areaBtn}>
                     <TouchableOpacity 
@@ -37,7 +49,10 @@ export default function Login() {
                     >
                         <Text style={styles.textBtn}>Entrar</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btn}>
+                    <TouchableOpacity
+                        style={styles.btn}
+                        onPress={clearLoginData}
+                    >
                         <Text style={styles.textBtn}>Novo</Text>
                     </TouchableOpacity>
                     <TouchableOpacity 

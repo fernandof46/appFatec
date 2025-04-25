@@ -4,6 +4,7 @@ import Calendar from '../pages/Agendamento';
 import Welcome from "../pages/Welcome";
 import Login from "../pages/Login";
 import Sobre from "../pages/Sobre";
+import Agendamento from "../pages/Agendamento";
 
 const Stack = createStackNavigator();
 
@@ -46,8 +47,8 @@ export default function Routes() {
             />
             
             <Stack.Screen
-                name="Calendar"
-                component={Calendar}
+                name="Agendamento"
+                component={Agendamento}
                 options={{
                     headerShown: true,
                     title: 'Calendário',
